@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kimtuna/goLogin/models"
 	"github.com/kimtuna/goLogin/security"
 	s "github.com/kimtuna/goLogin/setup"
 	"github.com/kimtuna/goLogin/token"
@@ -16,13 +17,6 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type User struct {
-	Email                 string `gorm:"primaryKey"`
-	Token                 string
-	Hash                  string
-	RefreshTokenExpiresAt time.Time
-}
-
 func Register(c *gin.Context) {
 	var req RegisterRequest
 
@@ -32,7 +26,7 @@ func Register(c *gin.Context) {
 	}
 
 	// 데이터베이스에서 사용자 Email이 이미 존재하는지 확인
-	var existingUser User
+	var existingUser models.User
 	if err := s.DB.First(&existingUser, "email = ?", req.Email).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
@@ -45,22 +39,11 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Access Token 및 Refresh Token 생성
-	accessToken, refreshToken, err := token.GenerateTokens(s.DB, req.Name, req.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
-
-	// Refresh Token 만료 시간 설정
-	refreshTokenExpiration := time.Now().Add(7 * 24 * time.Hour) // 7일 만료
-
 	// 사용자 정보 데이터베이스에 저장
-	newUser := User{
+	newUser := models.User{
 		Email:                 req.Email,
-		Token:                 refreshToken,
 		Hash:                  hashedPassword,
-		RefreshTokenExpiresAt: refreshTokenExpiration,
+		RefreshTokenExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7일 만료
 	}
 
 	if err := s.DB.Create(&newUser).Error; err != nil {
@@ -68,10 +51,17 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Access Token 및 Refresh Token 생성
+	accessToken, refreshToken, err := token.GenerateTokens(s.DB, newUser.ID, req.Name, req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":                  "User registered successfully",
 		"access_token":             accessToken,
 		"refresh_token":            refreshToken,
-		"refresh_token_expires_at": refreshTokenExpiration,
+		"refresh_token_expires_at": newUser.RefreshTokenExpiresAt,
 	})
 }

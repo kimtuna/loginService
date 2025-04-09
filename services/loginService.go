@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	setup "github.com/kimtuna/goLogin/setup"
+	"github.com/kimtuna/goLogin/models"
+	"github.com/kimtuna/goLogin/setup"
 	"github.com/kimtuna/goLogin/token"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,7 +23,7 @@ func Login(c *gin.Context) {
 	}
 
 	// 데이터베이스에서 사용자 정보 조회
-	var user setup.User
+	var user models.User
 	if err := setup.DB.Where("email = ?", loginData.Email).First(&user).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
@@ -35,7 +36,7 @@ func Login(c *gin.Context) {
 	}
 
 	// JWT 토큰 생성
-	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, "User Name", loginData.Email)
+	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, user.ID, "User Name", loginData.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return

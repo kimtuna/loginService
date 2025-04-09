@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kimtuna/goLogin/models"
@@ -32,22 +31,17 @@ func ConnectDataBase() {
 
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("Cannot connect to database")
-		log.Fatal("connection error:", err)
+		log.Fatalf("Cannot connect to database: %v", err)
 	} else {
 		fmt.Println("We are connected to the database")
 	}
 
 	// User 및 RefreshToken 모델에 맞게 테이블을 자동으로 마이그레이션합니다.
-	DB.AutoMigrate(&models.User{}, &models.RefreshToken{})
-}
-
-// User 모델 정의
-type User struct {
-	Email                 string `gorm:"primaryKey"`
-	Token                 string
-	Hash                  string
-	RefreshTokenExpiresAt time.Time
+	if err := DB.AutoMigrate(&models.User{}, &models.RefreshToken{}); err != nil {
+		log.Fatalf("AutoMigrate failed: %v", err)
+	} else {
+		fmt.Println("AutoMigrate completed successfully")
+	}
 }
 
 // 데이터베이스에서 토큰이 존재하는지 확인하는 함수

@@ -4,9 +4,9 @@ import "time"
 
 // User 모델 정의
 type User struct {
-	Email string `gorm:"primaryKey"`
-	Token string
-	Hash  string
+	ID                    uint   `gorm:"primaryKey;autoIncrement"`
+	Email                 string `gorm:"type:varchar(255);uniqueIndex"`
+	Hash                  string
 	RefreshTokenExpiresAt time.Time
 }
 

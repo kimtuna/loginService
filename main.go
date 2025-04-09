@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	Services "github.com/kimtuna/goLogin/Services"
+	services "github.com/kimtuna/goLogin/services"
 	setup "github.com/kimtuna/goLogin/setup"
 )
 
@@ -23,8 +23,8 @@ func main() {
 
 	public := r.Group("/api/auth")
 
-	public.POST("/register", Services.Register)
-	public.POST("/login", Services.Login)
+	public.POST("/register", services.Register)
+	public.POST("/login", services.Login)
 
 	// 포트 설정
 	port := os.Getenv("PORT")
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	protected := r.Group("/api/auth")
-	protected.GET("/user", Services.UserInfo)
+	protected.GET("/user", services.UserInfo)
 
 	r.Run(":" + port) // 서버 실행
 }

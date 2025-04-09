@@ -7,7 +7,10 @@ import (
 	"github.com/kimtuna/goLogin/models"
 	"github.com/kimtuna/goLogin/setup"
 	"github.com/kimtuna/goLogin/token"
+	"github.com/sirupsen/logrus"
 )
+
+var log = logrus.New()
 
 // 사용자 정보 핸들러
 func UserInfo(c *gin.Context) {
@@ -25,9 +28,13 @@ func UserInfo(c *gin.Context) {
 		return
 	}
 
+	// 로그 추가
+	log.Printf("Extracted email from token: %s", claims.Email)
+
 	// 데이터베이스에서 사용자 조회
 	var user models.User
 	if err := setup.DB.Where("email = ?", claims.Email).First(&user).Error; err != nil {
+		log.Printf("Error finding user: %v", err) // 로그 추가
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -35,7 +42,6 @@ func UserInfo(c *gin.Context) {
 	// 해시 필드를 제외하고 사용자 정보 반환
 	c.JSON(http.StatusOK, gin.H{
 		"email": user.Email,
-		"token": user.Token,
 		// 다른 필요한 필드 추가
 	})
 }

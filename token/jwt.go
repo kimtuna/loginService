@@ -24,6 +24,7 @@ var refreshKey = []byte(os.Getenv("REFRESH_KEY"))
 
 // Claims 구조체 정의
 type Claims struct {
+	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 	Hash  string `json:"hash"`
@@ -120,10 +121,11 @@ func GetUserInfoFromToken(r *http.Request) (*Claims, error) {
 }
 
 // Access Token과 Refresh Token 생성
-func GenerateTokens(db *gorm.DB, name, email string) (string, string, error) {
+func GenerateTokens(db *gorm.DB, id uint, name, email string) (string, string, error) {
 	// Access Token 생성
 	accessTokenExpiration := time.Now().Add(15 * time.Minute) // 15분 만료
 	accessClaims := &Claims{
+		ID:    id,
 		Name:  name,
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -138,6 +140,7 @@ func GenerateTokens(db *gorm.DB, name, email string) (string, string, error) {
 
 	// Refresh Token 생성
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, &Claims{
+		ID:    id,
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour)), // 7일 만료
