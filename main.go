@@ -20,9 +20,12 @@ func main() {
 	setup.ConnectDataBase()
 
 	r := gin.Default()
+	// 구글 oauth
+	r.GET("/auth/google/login", services.GoogleLogin)
+	r.GET("/auth/google/callback", services.GoogleCallback)
 
+	// 서비스 내부 로그인 회원가입
 	public := r.Group("/api/auth")
-
 	public.POST("/register", services.Register)
 	public.POST("/login", services.Login)
 

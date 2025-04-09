@@ -16,3 +16,11 @@ type RefreshToken struct {
 	Email     string
 	ExpiresAt time.Time
 }
+
+type OAuthUser struct {
+	ID           uint   `gorm:"primaryKey;autoIncrement"`
+	Email        string `gorm:"type:varchar(255);uniqueIndex"`
+	GoogleID     string `gorm:"type:varchar(255);uniqueIndex"`
+	RefreshToken string `gorm:"type:text"` // 리프레시 토큰 저장
+	CreatedAt    time.Time
+}
