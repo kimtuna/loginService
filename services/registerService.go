@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kimtuna/goLogin/security"
@@ -16,9 +17,10 @@ type RegisterRequest struct {
 }
 
 type User struct {
-	Email string `gorm:"primaryKey"`
-	Token string
-	Hash  string
+	Email                 string `gorm:"primaryKey"`
+	Token                 string
+	Hash                  string
+	RefreshTokenExpiresAt time.Time
 }
 
 func Register(c *gin.Context) {
@@ -43,18 +45,22 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// 토큰 생성
+	// Access Token 및 Refresh Token 생성
 	accessToken, refreshToken, err := token.GenerateTokens(s.DB, req.Name, req.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
+	// Refresh Token 만료 시간 설정
+	refreshTokenExpiration := time.Now().Add(7 * 24 * time.Hour) // 7일 만료
+
 	// 사용자 정보 데이터베이스에 저장
 	newUser := User{
-		Email: req.Email,
-		Token: refreshToken,
-		Hash:  hashedPassword,
+		Email:                 req.Email,
+		Token:                 refreshToken,
+		Hash:                  hashedPassword,
+		RefreshTokenExpiresAt: refreshTokenExpiration,
 	}
 
 	if err := s.DB.Create(&newUser).Error; err != nil {
@@ -63,8 +69,9 @@ func Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":       "User registered successfully",
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
+		"message":                  "User registered successfully",
+		"access_token":             accessToken,
+		"refresh_token":            refreshToken,
+		"refresh_token_expires_at": refreshTokenExpiration,
 	})
 }

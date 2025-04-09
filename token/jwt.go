@@ -2,6 +2,7 @@ package token
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -67,20 +68,36 @@ func checkTokenInDatabase(tokenString string) error {
 	return nil
 }
 
-func isTokenValid(tokenString string) (*Claims, error) {
-	// 토큰 파싱 및 검증
+// "Bearer " 접두사 제거 함수
+func DeleteBearer(authHeader string) string {
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		log.Printf("Invalid token format: %s", authHeader)
+		return ""
+	}
+	return tokenString
+}
+
+// Access Token 검증
+func ValidateAccessToken(authHeader string) (*Claims, error) {
+	// "Bearer " 접두사 제거
+	tokenString := DeleteBearer(authHeader)
+	if tokenString == "" {
+		return nil, errors.New("Invalid token format")
+	}
+
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return accessKey, nil
 	})
 
 	if err != nil || !token.Valid {
-		return nil, errors.New("토큰 검증 실패")
+		return nil, errors.New("유효하지 않은 액세스 토큰입니다")
 	}
 
-	// 토큰 유효기간 확인
+	// 만료 시간 검증
 	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(time.Now()) {
-		return nil, errors.New("토큰이 만료되었습니다")
+		return nil, errors.New("액세스 토큰이 만료되었습니다")
 	}
 
 	return claims, nil
@@ -93,14 +110,8 @@ func GetUserInfoFromToken(r *http.Request) (*Claims, error) {
 		return nil, errors.New("토큰이 제공되지 않았습니다")
 	}
 
-	// "Bearer " 접두사 제거
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	if tokenString == authHeader {
-		return nil, errors.New("유효하지 않은 토큰 형식입니다")
-	}
-
 	// 토큰 유효성 검증
-	claims, err := isTokenValid(tokenString)
+	claims, err := ValidateAccessToken(authHeader)
 	if err != nil {
 		return nil, err
 	}

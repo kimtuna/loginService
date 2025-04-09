@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/kimtuna/goLogin/models"
@@ -14,25 +15,22 @@ import (
 var DB *gorm.DB
 
 func ConnectDataBase() {
-
 	err := godotenv.Load(".env")
-
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
 	// MySQL 관련 환경 변수 설정
-	DbUser := os.Getenv("DB_USER")         // 사용자 이름
-	DbPassword := os.Getenv("DB_PASSWORD") // 비밀번호
-	DbHost := os.Getenv("DB_HOST")         // 외부 서버의 도메인 이름
-	DbPort := os.Getenv("DB_PORT")         // 외부 서버의 포트 번호
-	DbName := "logindb"                    // 데이터베이스 이름
+	DbUser := os.Getenv("DB_USER")
+	DbPassword := os.Getenv("DB_PASSWORD")
+	DbHost := os.Getenv("DB_HOST")
+	DbPort := os.Getenv("DB_PORT")
+	DbName := os.Getenv("DB_NAME")
 
 	// DSN(Data Source Name) 생성
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", DbUser, DbPassword, DbHost, DbPort, DbName)
 
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-
 	if err != nil {
 		fmt.Println("Cannot connect to database")
 		log.Fatal("connection error:", err)
@@ -46,14 +44,15 @@ func ConnectDataBase() {
 
 // User 모델 정의
 type User struct {
-	Email string `gorm:"primaryKey"`
-	Token string
-	Hash  string
+	Email                 string `gorm:"primaryKey"`
+	Token                 string
+	Hash                  string
+	RefreshTokenExpiresAt time.Time
 }
 
 // 데이터베이스에서 토큰이 존재하는지 확인하는 함수
 func IsTokenInDatabase(tokenString string) bool {
-	var user User
+	var user models.User
 	// 토큰이 데이터베이스에 존재하는지 확인
 	if err := DB.Where("token = ?", tokenString).First(&user).Error; err != nil {
 		return false

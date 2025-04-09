@@ -7,6 +7,7 @@ type User struct {
 	Email string `gorm:"primaryKey"`
 	Token string
 	Hash  string
+	RefreshTokenExpiresAt time.Time
 }
 
 // RefreshToken 모델 정의
