@@ -32,7 +32,7 @@ func main() {
 	// 포트 설정
 	port := os.Getenv("PORT")
 	if port == "" {
-		log.Fatal("PORT environment variable not set")
+		log.Fatal("DOCKER_PORT environment variable not set")
 	}
 
 	protected := r.Group("/api/auth")

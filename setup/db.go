@@ -36,9 +36,8 @@ func ConnectDataBase() {
 		fmt.Println("We are connected to the database")
 	}
 
-	
 	// User 및 RefreshToken 모델에 맞게 테이블을 자동으로 마이그레이션합니다.
-	if err := DB.AutoMigrate(&models.User{}, &models.RefreshToken{},&models.OAuthUser{}); err != nil {
+	if err := DB.AutoMigrate(&models.User{}, &models.RefreshToken{}, &models.OAuthUser{}); err != nil {
 		log.Fatalf("AutoMigrate failed: %v", err)
 	} else {
 		fmt.Println("AutoMigrate completed successfully")
