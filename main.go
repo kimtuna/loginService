@@ -1,42 +1,49 @@
 package main
 
 import (
-	"log"
-	"os"
+        "log"
+        "os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	services "github.com/kimtuna/goLogin/services"
-	setup "github.com/kimtuna/goLogin/setup"
+        "github.com/gin-gonic/gin"
+        "github.com/joho/godotenv"
+        services "github.com/kimtuna/goLogin/services"
+        setup "github.com/kimtuna/goLogin/setup"
 )
 
 func main() {
-	// 환경 변수 로드
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatalf("Error loading .env file")
+    }
 
-	setup.ConnectDataBase()
+    setup.ConnectDataBase()
 
-	r := gin.Default()
-	// 구글 oauth
-	r.GET("/auth/google/login", services.GoogleLogin)
-	r.GET("/auth/google/callback", services.GoogleCallback)
+    r := gin.Default()
 
-	// 서비스 내부 로그인 회원가입
-	public := r.Group("/api/auth")
-	public.POST("/register", services.Register)
-	public.POST("/login", services.Login)
+    board := r.Group("/board")
+    {
+        api := board.Group("/api")
+        {
+            auth := api.Group("/auth")
+            {
+                // 구글 oauth
+                auth.GET("/google/login", services.GoogleLogin)
+                auth.GET("/google/callback", services.GoogleCallback)
 
-	// 포트 설정
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Fatal("DOCKER_PORT environment variable not set")
-	}
+                // 서비스 내부 로그인 회원가입
+                auth.POST("/register", services.Register)
+                auth.POST("/login", services.Login)
 
-	protected := r.Group("/api/auth")
-	protected.GET("/user", services.UserInfo)
+                auth.GET("/user", services.UserInfo)
+            }
+        }
+    }
 
-	r.Run(":" + port) // 서버 실행
+    // 포트 설정
+    port := os.Getenv("PORT")
+    if port == "" {
+        log.Fatal("DOCKER_PORT environment variable not set")
+    }
+
+    r.Run(":" + port) // 서버 실행
 }
