@@ -30,8 +30,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// 사용자 ID 가져오기
+	// 사용자 ID 및 이름 가져오기
 	userID := user.ID
+	userName := user.Name // 데이터베이스에서 사용자 이름 가져오기
 
 	// 비밀번호 검증
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Hash), []byte(loginData.Password)); err != nil {
@@ -40,7 +41,7 @@ func Login(c *gin.Context) {
 	}
 
 	// JWT 토큰 생성
-	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, userID, "User Name", loginData.Email)
+	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, userID, userName, loginData.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return

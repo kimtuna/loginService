@@ -80,13 +80,7 @@ func DeleteBearer(authHeader string) string {
 }
 
 // Access Token 검증
-func ValidateAccessToken(authHeader string) (*Claims, error) {
-	// "Bearer " 접두사 제거
-	tokenString := DeleteBearer(authHeader)
-	if tokenString == "" {
-		return nil, errors.New("Invalid token format")
-	}
-
+func ValidateAccessToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return accessKey, nil
@@ -121,7 +115,7 @@ func GetUserInfoFromToken(r *http.Request) (*Claims, error) {
 }
 
 // Access Token과 Refresh Token 생성
-func GenerateTokens(db *gorm.DB, id uint, name, email string) (string, string, error) {
+func GenerateTokens(db *gorm.DB, id uint, name string, email string) (string, string, error) {
 	// Access Token 생성
 	accessTokenExpiration := time.Now().Add(15 * time.Minute) // 15분 만료
 	accessClaims := &Claims{

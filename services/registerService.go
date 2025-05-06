@@ -41,6 +41,7 @@ func Register(c *gin.Context) {
 
 	// 사용자 정보 데이터베이스에 저장
 	newUser := models.User{
+		Name:                  req.Name,
 		Email:                 req.Email,
 		Hash:                  hashedPassword,
 		RefreshTokenExpiresAt: time.Now().Add(7 * 24 * time.Hour), // 7일 만료
