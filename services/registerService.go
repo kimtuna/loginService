@@ -52,16 +52,14 @@ func Register(c *gin.Context) {
 	}
 
 	// Access Token 및 Refresh Token 생성
-	accessToken, refreshToken, err := token.GenerateTokens(s.DB, newUser.ID, req.Name, req.Email)
+	_, _, err = token.GenerateTokens(s.DB, newUser.ID, req.Name, req.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
+	// 사용자 ID만 반환
 	c.JSON(http.StatusOK, gin.H{
-		"message":                  "User registered successfully",
-		"access_token":             accessToken,
-		"refresh_token":            refreshToken,
-		"refresh_token_expires_at": newUser.RefreshTokenExpiresAt,
+		"user_id": newUser.ID,
 	})
 }

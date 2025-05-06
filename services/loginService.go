@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kimtuna/goLogin/models"
@@ -42,8 +43,13 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-	})
+	// 환경 변수에서 도메인 가져오기
+	domain := os.Getenv("DOMAIN")
+
+	// 쿠키 설정
+	c.SetCookie("access_token", accessToken, 3600, "/", domain, true, true)
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", domain, true, true)
+
+	// 성공 응답
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
