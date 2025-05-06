@@ -30,6 +30,9 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// 사용자 ID 가져오기
+	userID := user.ID
+
 	// 비밀번호 검증
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Hash), []byte(loginData.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
@@ -37,7 +40,7 @@ func Login(c *gin.Context) {
 	}
 
 	// JWT 토큰 생성
-	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, user.ID, "User Name", loginData.Email)
+	accessToken, refreshToken, err := token.GenerateTokens(setup.DB, userID, "User Name", loginData.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
@@ -51,5 +54,5 @@ func Login(c *gin.Context) {
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", domain, true, true)
 
 	// 성공 응답
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	c.JSON(http.StatusOK, gin.H{"id": userID})
 }
