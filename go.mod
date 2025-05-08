@@ -11,6 +11,11 @@ require (
 	google.golang.org/api v0.228.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
+	github.com/google/go-cmp v0.5.9
+	github.com/kr/pretty v0.3.0
+	github.com/rogpeppe/go-internal v1.8.0
+	github.com/stretchr/testify v1.8.0
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 
 require (
